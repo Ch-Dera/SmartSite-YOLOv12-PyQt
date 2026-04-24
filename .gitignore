@@ -1,0 +1,22 @@
+# 1. 深度学习权重文件 (防 100MB 爆炸)
+models/*.pt
+models/*.onnx
+models/*.engine
+
+# 2. 官方及系统运行产生的缓存与垃圾 (防污染开源环境)
+logs/
+gradio_cached_examples/
+ultralytics.egg-info/
+runs/
+__pycache__/
+*.pyc
+
+# 3. 咱们系统本地产生的业务数据
+抓拍图库/
+*.db
+*.sqlite3
+
+# 4. IDE 配置文件
+.idea/
+.vscode/
+.DS_Store
