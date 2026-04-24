@@ -240,11 +240,11 @@ class DBHelper:
 
     def delete_user(self, target_username):
         """开除员工：硬核删除账号"""
-        conn = self.connect()
-        if not conn: return False, "数据库连接失败"
-
         if target_username == 'admin':
             return False, "系统警告：无法删除超级管理员账号！"
+
+        conn = self.connect()
+        if not conn: return False, "数据库连接失败"
 
         try:
             with conn.cursor() as cursor:
