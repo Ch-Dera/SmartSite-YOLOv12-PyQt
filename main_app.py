@@ -320,6 +320,13 @@ class MainApp(QMainWindow, Ui_ModernWindow):
                 self.lbl_checkin_status.setStyleSheet(
                     "color: #10B981; font-size: 18px; font-weight: bold; background-color: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px;")
         else:
+            if hasattr(self, 'btn_check_in'):
+                self.btn_check_in.setText("立即签到")
+                self.btn_check_in.setEnabled(True)
+            if hasattr(self, 'lbl_check_in_msg'):
+                self.lbl_check_in_msg.setText("今日尚未打卡")
+                self.lbl_check_in_msg.setStyleSheet(
+                    "color: #EF4444; font-weight: bold; font-size: 15px; border: none; margin-top: 15px;")
             if hasattr(self, 'lbl_checkin_status'):
                 self.lbl_checkin_status.setText("❌ 今日未签到，请前往首页打卡！")
                 self.lbl_checkin_status.setStyleSheet(
