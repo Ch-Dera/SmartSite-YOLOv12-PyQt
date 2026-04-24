@@ -79,6 +79,12 @@ class DBHelper:
             conn.close()
 
     def register_user(self, username, password, email, role='operator'):
+        # 先做纯字符串校验，再连数据库
+        if not str(username).strip() or not str(password).strip() or not str(email).strip():
+            return False
+        if len(str(password)) < 6:
+            return False
+
         conn = self.connect()
         if not conn: return False
         try:
@@ -147,6 +153,16 @@ class DBHelper:
             conn.close()
 
     def update_user_password(self, username, old_pwd, new_pwd):
+        # 先做与数据库无关的输入校验
+        if not str(username).strip():
+            return False, "用户名不能为空"
+        if not str(old_pwd).strip() or not str(new_pwd).strip():
+            return False, "原密码和新密码不能为空"
+        if str(old_pwd) == str(new_pwd):
+            return False, "新密码不能与原密码一致"
+        if len(str(old_pwd)) == len(str(new_pwd)):
+            return False, "新旧密码长度不能一致"
+
         conn = self.connect()
         if not conn: return False, "数据库连接失败"
         try:
@@ -240,11 +256,11 @@ class DBHelper:
 
     def delete_user(self, target_username):
         """开除员工：硬核删除账号"""
-        conn = self.connect()
-        if not conn: return False, "数据库连接失败"
-
         if target_username == 'admin':
             return False, "系统警告：无法删除超级管理员账号！"
+
+        conn = self.connect()
+        if not conn: return False, "数据库连接失败"
 
         try:
             with conn.cursor() as cursor:
