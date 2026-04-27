@@ -392,7 +392,7 @@ class Ui_ModernWindow(object):
             # 🚨 实时监控
             elif name == "实时监控":
                 control_layout = QtWidgets.QHBoxLayout()
-                self.btn_start_cams = QtWidgets.QPushButton("▶️ 启动双路监控")
+                self.btn_start_cams = QtWidgets.QPushButton("▶️ 启动投射监控")
                 self.btn_start_cams.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
                 self.btn_start_cams.setFixedHeight(40)
                 self.btn_start_cams.setStyleSheet(
@@ -431,6 +431,61 @@ class Ui_ModernWindow(object):
                 control_layout.addSpacing(5)
                 control_layout.addWidget(self.label_fps_cam2, alignment=QtCore.Qt.AlignVCenter)
                 layout.addLayout(control_layout, stretch=0)
+
+                library_layout = QtWidgets.QHBoxLayout()
+                library_layout.setSpacing(20)
+                channel_panel = QtWidgets.QWidget()
+                channel_panel.setStyleSheet(
+                    "QWidget { background-color: #1A1B1D; border: 1px solid #333537; border-radius: 10px; }")
+                channel_panel_layout = QtWidgets.QVBoxLayout(channel_panel)
+                channel_panel_layout.setContentsMargins(15, 15, 15, 15)
+                lbl_lib_title = QtWidgets.QLabel("📚 监控通道库")
+                lbl_lib_title.setStyleSheet("color:#E3E3E3;font-size:16px;font-weight:bold;border:none;")
+                channel_panel_layout.addWidget(lbl_lib_title)
+                self.list_channel_library = QtWidgets.QListWidget()
+                self.list_channel_library.setMinimumHeight(110)
+                self.list_channel_library.setStyleSheet(
+                    "QListWidget { background-color:#131314; border:1px solid #333537; border-radius:8px; color:#E3E3E3; padding:6px; }"
+                    "QListWidget::item { padding:6px; } QListWidget::item:selected { background-color:#004A77; color:#FFFFFF; border-radius:4px; }")
+                channel_panel_layout.addWidget(self.list_channel_library)
+                lib_btn_layout = QtWidgets.QHBoxLayout()
+                self.btn_add_rtsp = QtWidgets.QPushButton("➕ 添加 RTSP")
+                self.btn_add_local_channel = QtWidgets.QPushButton("📁 添加本地视频")
+                self.btn_remove_channel = QtWidgets.QPushButton("🗑️ 删除选中")
+                for btn in [self.btn_add_rtsp, self.btn_add_local_channel, self.btn_remove_channel]:
+                    btn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+                    btn.setStyleSheet(
+                        "QPushButton { background-color: #2B2D30; color: #E3E3E3; border: 1px solid #43454A; border-radius: 6px; padding: 8px 12px; font-weight: bold; } QPushButton:hover { background-color: #3574F0; border: none; }")
+                    lib_btn_layout.addWidget(btn)
+                channel_panel_layout.addLayout(lib_btn_layout)
+                library_layout.addWidget(channel_panel, stretch=3)
+
+                projection_panel = QtWidgets.QWidget()
+                projection_panel.setStyleSheet(
+                    "QWidget { background-color: #1A1B1D; border: 1px solid #333537; border-radius: 10px; }")
+                projection_layout = QtWidgets.QVBoxLayout(projection_panel)
+                projection_layout.setContentsMargins(15, 15, 15, 15)
+                lbl_projection_title = QtWidgets.QLabel("🎛️ 通道投射")
+                lbl_projection_title.setStyleSheet("color:#E3E3E3;font-size:16px;font-weight:bold;border:none;")
+                projection_layout.addWidget(lbl_projection_title)
+                row_ch1 = QtWidgets.QHBoxLayout()
+                row_ch1.addWidget(QtWidgets.QLabel("CH1 投射源:", styleSheet="color:#9CA3AF;border:none;"))
+                self.combo_ch1_source = QtWidgets.QComboBox()
+                row_ch1.addWidget(self.combo_ch1_source, stretch=1)
+                projection_layout.addLayout(row_ch1)
+                row_ch2 = QtWidgets.QHBoxLayout()
+                row_ch2.addWidget(QtWidgets.QLabel("CH2 投射源:", styleSheet="color:#9CA3AF;border:none;"))
+                self.combo_ch2_source = QtWidgets.QComboBox()
+                row_ch2.addWidget(self.combo_ch2_source, stretch=1)
+                projection_layout.addLayout(row_ch2)
+                self.btn_apply_projection = QtWidgets.QPushButton("💾 保存投射配置")
+                self.btn_apply_projection.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+                self.btn_apply_projection.setStyleSheet(
+                    "QPushButton { background-color:#004A77; color:#FFFFFF; border-radius:6px; padding:8px 12px; font-weight:bold; margin-top:8px; } QPushButton:hover { background-color:#005B94; }")
+                projection_layout.addWidget(self.btn_apply_projection)
+                projection_layout.addStretch()
+                library_layout.addWidget(projection_panel, stretch=2)
+                layout.addLayout(library_layout, stretch=0)
 
                 screen_layout = QtWidgets.QHBoxLayout()
                 screen_layout.setSpacing(20)

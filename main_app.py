@@ -3,10 +3,11 @@ import cv2
 import os
 import time
 import datetime
+import json
 import requests
 from collections import Counter
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QFileDialog, QDialog, QLabel, \
-    QVBoxLayout, QMessageBox, QPushButton
+    QVBoxLayout, QMessageBox, QPushButton, QInputDialog
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QSettings, QTimer
 from PyQt5.QtGui import QImage, QPixmap, QCursor, QColor, QFont, QPainter
 from PyQt5.QtChart import QChart, QChartView, QPieSeries, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
@@ -242,6 +243,10 @@ class MainApp(QMainWindow, Ui_ModernWindow):
         if hasattr(self, 'btn_start_cams'): self.btn_start_cams.clicked.connect(self.start_rt_cams)
         if hasattr(self, 'btn_stop_cams'): self.btn_stop_cams.clicked.connect(self.stop_detection)
         if hasattr(self, 'slider_conf_rt'): self.slider_conf_rt.valueChanged.connect(self.update_rt_slider)
+        if hasattr(self, 'btn_add_rtsp'): self.btn_add_rtsp.clicked.connect(self.add_rtsp_channel)
+        if hasattr(self, 'btn_add_local_channel'): self.btn_add_local_channel.clicked.connect(self.add_local_channel)
+        if hasattr(self, 'btn_remove_channel'): self.btn_remove_channel.clicked.connect(self.remove_selected_channel)
+        if hasattr(self, 'btn_apply_projection'): self.btn_apply_projection.clicked.connect(self.save_projection_config)
         if hasattr(self, 'btn_search_history'): self.btn_search_history.clicked.connect(self.filter_history)
         if hasattr(self, 'btn_reset_history'): self.btn_reset_history.clicked.connect(self.reset_history)
 
@@ -278,6 +283,94 @@ class MainApp(QMainWindow, Ui_ModernWindow):
         self.load_history()
         self.refresh_attendance_ui()
         self.auto_cleanup_captures()
+
+    def get_default_channel_library(self):
+        return [
+            {"name": "内置摄像头 CH-01", "type": "webcam", "value": "0"},
+            {"name": "内置摄像头 CH-02", "type": "webcam", "value": "1"}
+        ]
+
+    def refresh_channel_library_ui(self):
+        if not hasattr(self, 'list_channel_library'):
+            return
+        self.list_channel_library.clear()
+        if not hasattr(self, 'channel_library'):
+            self.channel_library = self.get_default_channel_library()
+        for channel in self.channel_library:
+            type_text = "RTSP" if channel["type"] == "rtsp" else ("摄像头" if channel["type"] == "webcam" else "本地视频")
+            self.list_channel_library.addItem(f'{channel["name"]}  [{type_text}]')
+
+        if hasattr(self, 'combo_ch1_source') and hasattr(self, 'combo_ch2_source'):
+            self.combo_ch1_source.clear()
+            self.combo_ch2_source.clear()
+            for idx, channel in enumerate(self.channel_library):
+                self.combo_ch1_source.addItem(channel["name"], idx)
+                self.combo_ch2_source.addItem(channel["name"], idx)
+            if self.combo_ch1_source.count() > 0 and self.combo_ch2_source.count() > 0:
+                ch1_idx = min(getattr(self, 'rt_projection_ch1', 0), self.combo_ch1_source.count() - 1)
+                ch2_idx = min(getattr(self, 'rt_projection_ch2', 1), self.combo_ch2_source.count() - 1)
+                self.combo_ch1_source.setCurrentIndex(ch1_idx)
+                self.combo_ch2_source.setCurrentIndex(ch2_idx)
+
+    def add_rtsp_channel(self):
+        rtsp_url, ok = QInputDialog.getText(self, "添加 RTSP 通道", "请输入 RTSP 地址：")
+        if not ok or not rtsp_url.strip():
+            return
+        url = rtsp_url.strip()
+        if not url.lower().startswith("rtsp://"):
+            QMessageBox.warning(self, "地址无效", "RTSP 地址需以 rtsp:// 开头。")
+            return
+        channel_name = f"RTSP-{len(self.channel_library) + 1}"
+        self.channel_library.append({"name": channel_name, "type": "rtsp", "value": url})
+        self.refresh_channel_library_ui()
+        self.save_projection_config(show_message=False)
+
+    def add_local_channel(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "选择本地视频通道", "", "视频文件 (*.mp4 *.avi *.mov *.mkv)")
+        if not file_path:
+            return
+        channel_name = os.path.basename(file_path)
+        self.channel_library.append({"name": channel_name, "type": "video", "value": file_path})
+        self.refresh_channel_library_ui()
+        self.save_projection_config(show_message=False)
+
+    def remove_selected_channel(self):
+        if not hasattr(self, 'list_channel_library'):
+            return
+        row = self.list_channel_library.currentRow()
+        if row < 0 or row >= len(self.channel_library):
+            QMessageBox.information(self, "提示", "请先在通道库中选中一个通道。")
+            return
+        removed = self.channel_library.pop(row)
+        self.rt_projection_ch1 = min(self.rt_projection_ch1, max(len(self.channel_library) - 1, 0))
+        self.rt_projection_ch2 = min(self.rt_projection_ch2, max(len(self.channel_library) - 1, 0))
+        self.refresh_channel_library_ui()
+        self.save_projection_config(show_message=False)
+        QMessageBox.information(self, "删除成功", f"已移除通道：{removed['name']}")
+
+    def save_projection_config(self, show_message=True):
+        if hasattr(self, 'combo_ch1_source'):
+            self.rt_projection_ch1 = max(self.combo_ch1_source.currentIndex(), 0)
+        if hasattr(self, 'combo_ch2_source'):
+            self.rt_projection_ch2 = max(self.combo_ch2_source.currentIndex(), 0)
+        self.settings.setValue(f"{self.current_username}_channel_library", json.dumps(self.channel_library, ensure_ascii=False))
+        self.settings.setValue(f"{self.current_username}_rt_ch1_idx", self.rt_projection_ch1)
+        self.settings.setValue(f"{self.current_username}_rt_ch2_idx", self.rt_projection_ch2)
+        if show_message:
+            QMessageBox.information(self, "保存成功", "通道库与投射配置已保存。")
+
+    def resolve_channel_source(self, channel_index):
+        if channel_index < 0 or channel_index >= len(self.channel_library):
+            raise ValueError("通道索引越界")
+        channel = self.channel_library[channel_index]
+        if channel["type"] == "webcam":
+            try:
+                source = int(channel["value"])
+            except ValueError:
+                source = 0
+        else:
+            source = channel["value"]
+        return source, channel["name"]
 
     # ------------------------------------------
     # 🏠 系统首页核心引擎：时钟与打卡
@@ -573,6 +666,19 @@ class MainApp(QMainWindow, Ui_ModernWindow):
         saved_cleanup = self.settings.value(f"{self.current_username}_cleanup", "永久保留 (需手动清理)")
         if hasattr(self, 'combo_cleanup'): self.combo_cleanup.setCurrentText(saved_cleanup)
 
+        self.rt_projection_ch1 = self.settings.value(f"{self.current_username}_rt_ch1_idx", 0, type=int)
+        self.rt_projection_ch2 = self.settings.value(f"{self.current_username}_rt_ch2_idx", 1, type=int)
+        raw_channels = self.settings.value(f"{self.current_username}_channel_library", "", type=str)
+        self.channel_library = self.get_default_channel_library()
+        if raw_channels:
+            try:
+                loaded_channels = json.loads(raw_channels)
+                if isinstance(loaded_channels, list) and loaded_channels:
+                    self.channel_library = loaded_channels
+            except Exception:
+                pass
+        self.refresh_channel_library_ui()
+
         self.sound_alert_enabled = self.settings.value(f"{self.current_username}_sound", True, type=bool)
         if hasattr(self, 'check_sound_alert'): self.check_sound_alert.setChecked(self.sound_alert_enabled)
 
@@ -705,15 +811,19 @@ class MainApp(QMainWindow, Ui_ModernWindow):
             self.run_detection(source1=file_path, mode='video')
 
     def start_rt_cams(self):
-        file_paths, _ = QFileDialog.getOpenFileNames(self, "请选择 1 或 2 个视频", "", "视频文件 (*.mp4 *.avi)")
-        if not file_paths: return
+        if not hasattr(self, 'channel_library') or not self.channel_library:
+            QMessageBox.warning(self, "无法启动", "通道库为空，请先添加 RTSP 或本地视频通道。")
+            return
+        self.save_projection_config(show_message=False)
+        if self.rt_projection_ch1 >= len(self.channel_library) or self.rt_projection_ch2 >= len(self.channel_library):
+            QMessageBox.warning(self, "配置无效", "通道投射索引超出范围，请重新选择。")
+            return
         if hasattr(self, 'table_rt_results'): self.table_rt_results.setRowCount(0)
-        if len(file_paths) >= 2:
-            self.run_detection(source1=file_paths[0], source2=file_paths[1], mode='rt')
-        else:
-            self.run_detection(source1=0, source2=file_paths[0], mode='rt')
+        source1, name1 = self.resolve_channel_source(self.rt_projection_ch1)
+        source2, name2 = self.resolve_channel_source(self.rt_projection_ch2)
+        self.run_detection(source1=source1, source2=source2, mode='rt', rt_names=(name1, name2))
 
-    def run_detection(self, source1, source2=None, mode='image'):
+    def run_detection(self, source1, source2=None, mode='image', rt_names=None):
         self.stop_detection()
         self.current_mode = mode
 
@@ -747,6 +857,9 @@ class MainApp(QMainWindow, Ui_ModernWindow):
             self.yolo_thread_1.start()
 
         elif mode == 'rt':
+            if rt_names and hasattr(self, 'label_cam1_display'):
+                self.label_cam1_display.setText(f"CH1: {rt_names[0]}\n正在连接...")
+                self.label_cam2_display.setText(f"CH2: {rt_names[1]}\n正在连接...")
             source_type_2 = 'webcam' if isinstance(source2, int) else 'video'
             # 🌟 把 exact_model_path 传给第二个通道
             self.yolo_thread_2 = YOLOThread(source2, source_type_2, self.current_username, camera_id=2,
