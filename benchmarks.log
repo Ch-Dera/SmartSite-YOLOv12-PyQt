@@ -1,0 +1,36 @@
+
+Benchmarks complete for yolov12n_helmet.pt on coco8.yaml at imgsz=640 (96.12s)
+                   Format Status❔  Size (MB) metrics/mAP50-95(B) Inference time (ms/im)   FPS
+0                 PyTorch       ❎        5.2                None                   None  None
+1             TorchScript       ❎       10.4                None                   None  None
+2                    ONNX       ❎       10.0                None                   None  None
+3                OpenVINO       ❌        0.0                None                   None  None
+4                TensorRT       ❌        0.0                None                   None  None
+5                  CoreML       ❌        0.0                None                   None  None
+6   TensorFlow SavedModel       ❌        0.0                None                   None  None
+7     TensorFlow GraphDef       ❌        0.0                None                   None  None
+8         TensorFlow Lite       ❌        0.0                None                   None  None
+9     TensorFlow Edge TPU       ❌        0.0                None                   None  None
+10          TensorFlow.js       ❌        0.0                None                   None  None
+11           PaddlePaddle       ❌        0.0                None                   None  None
+12                    MNN       ❌        0.0                None                   None  None
+13                   NCNN       ❌        0.0                None                   None  None
+14                    IMX       ❌        0.0                None                   None  None
+
+Benchmarks complete for yolov12s_helmet.pt on coco8.yaml at imgsz=640 (99.08s)
+                   Format Status❔  Size (MB) metrics/mAP50-95(B) Inference time (ms/im)   FPS
+0                 PyTorch       ❎       18.0                None                   None  None
+1             TorchScript       ❎       35.8                None                   None  None
+2                    ONNX       ❎       35.4                None                   None  None
+3                OpenVINO       ❌        0.0                None                   None  None
+4                TensorRT       ❌        0.0                None                   None  None
+5                  CoreML       ❌        0.0                None                   None  None
+6   TensorFlow SavedModel       ❌        0.0                None                   None  None
+7     TensorFlow GraphDef       ❌        0.0                None                   None  None
+8         TensorFlow Lite       ❌        0.0                None                   None  None
+9     TensorFlow Edge TPU       ❌        0.0                None                   None  None
+10          TensorFlow.js       ❌        0.0                None                   None  None
+11           PaddlePaddle       ❌        0.0                None                   None  None
+12                    MNN       ❌        0.0                None                   None  None
+13                   NCNN       ❌        0.0                None                   None  None
+14                    IMX       ❌        0.0                None                   None  None

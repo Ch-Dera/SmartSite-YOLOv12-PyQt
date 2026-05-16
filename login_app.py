@@ -133,12 +133,11 @@ class LoginWindow(QWidget, Ui_Form):
             if role == 'admin':
                 QMessageBox.information(self, "最高权限", f"欢迎超级管理员：{username}！\n\n即将进入【管理端指挥中心】...")
                 self.admin_window = AdminWindow()
-                self.admin_window.show()
+                self.admin_window.showMaximized()  # 💥 修改点 1
                 self.close()
             else:
-                # 🌟 核心交接：登录门关闭，唤醒深空暗黑指挥大厅！
                 self.main_window = MainApp(username)
-                self.main_window.show()
+                self.main_window.showMaximized()  # 💥 修改点 2
                 self.close()
         else:
             QMessageBox.critical(self, "访问拒绝", "账号或系统密码不正确！")
@@ -183,7 +182,7 @@ class LoginWindow(QWidget, Ui_Form):
         password = 'qoxfhaweqforchbh'
 
         mail_content = f"""
-        【智慧工地安全检测系统 v2.0】
+        【智慧工地安全帽检测系统 v2.0】
 
         您好！您正在尝试重置系统密码。
         您的专属验证码是：{code}
@@ -209,5 +208,5 @@ class LoginWindow(QWidget, Ui_Form):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     login_win = LoginWindow()
-    login_win.show()
+    login_win.showMaximized()
     sys.exit(app.exec_())

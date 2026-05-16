@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class Ui_AdminWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -12,7 +11,7 @@ class Ui_AdminWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
-        # 🌟 核心升级：更换为顶级现代 Web 字体栈，全局字号加大，抗锯齿拉满
+        # 💥 同样拉满字号和间距比例
         MainWindow.setStyleSheet("""
             * { 
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; 
@@ -20,12 +19,12 @@ class Ui_AdminWindow(object):
             }
             QWidget#centralwidget { background-color: #131314; }
             QWidget#left_sidebar { background-color: #1E1F20; border-right: 1px solid #333537; }
-            QLabel#label_main_title { font-size: 22px; font-weight: bold; color: #FFFFFF; padding-top: 30px; }
-            QLabel#label_sub_title { font-size: 13px; color: #9CA3AF; padding-bottom: 25px; border-bottom: 1px solid #333537; margin-bottom: 15px; letter-spacing: 2px;}
+            QLabel#label_main_title { font-size: 26px; font-weight: bold; color: #FFFFFF; padding-top: 30px; }
+            QLabel#label_sub_title { font-size: 15px; color: #9CA3AF; padding-bottom: 25px; border-bottom: 1px solid #333537; margin-bottom: 25px; letter-spacing: 2px;}
 
-            QPushButton[class="nav_btn"] { background-color: transparent; color: #C4C7C5; font-size: 16px; text-align: center; border: 1px solid transparent; border-radius: 24px; font-weight: normal; }
+            QPushButton[class="nav_btn"] { background-color: transparent; color: #C4C7C5; font-size: 19px; text-align: center; border: 1px solid transparent; border-radius: 28px; font-weight: normal; }
             QPushButton[class="nav_btn"]:hover { background-color: #333537; color: #FFFFFF; }
-            QPushButton[class="nav_btn"]:checked { background-color: #004A77; color: #C3E7FF; font-weight: bold; border: 1px solid #004A77; border-radius: 24px; }
+            QPushButton[class="nav_btn"]:checked { background-color: #004A77; color: #C3E7FF; font-weight: bold; border: 1px solid #004A77; border-radius: 28px; }
             QLabel[class="page_title"] { font-size: 28px; font-weight: bold; color: #E3E3E3; }
 
             QTableWidget { background-color: #1E1F20; border: 1px solid #333537; border-radius: 12px; gridline-color: transparent; font-size: 15px; color: #E3E3E3; padding: 5px; }
@@ -49,9 +48,12 @@ class Ui_AdminWindow(object):
 
         self.left_sidebar = QtWidgets.QWidget(self.centralwidget)
         self.left_sidebar.setObjectName("left_sidebar")
+        # 💥 物理拉伸 1：侧边栏宽度
+        self.left_sidebar.setFixedWidth(280)
         self.verticalLayout_nav = QtWidgets.QVBoxLayout(self.left_sidebar)
         self.verticalLayout_nav.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_nav.setSpacing(6)
+        # 💥 物理拉伸 2：间距拉大到 20
+        self.verticalLayout_nav.setSpacing(20)
 
         self.label_main_title = QtWidgets.QLabel("管理员大厅")
         self.label_main_title.setAlignment(QtCore.Qt.AlignCenter)
@@ -69,20 +71,21 @@ class Ui_AdminWindow(object):
             btn = QtWidgets.QPushButton(name)
             btn.setProperty("class", "nav_btn")
             btn.setCheckable(True)
-            btn.setFixedSize(210, 48)
+            # 💥 物理拉伸 3：按钮宽高同步拉大
+            btn.setFixedSize(240, 56)
             if i == 0: btn.setChecked(True)
             self.verticalLayout_nav.addWidget(btn, 0, QtCore.Qt.AlignHCenter)
             self.nav_buttons.append(btn)
 
-        spacerItem_bottom = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum,
-                                                  QtWidgets.QSizePolicy.Expanding)
+        spacerItem_bottom = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_nav.addItem(spacerItem_bottom)
 
         self.btn_admin_logout = QtWidgets.QPushButton("退出管理端")
         self.btn_admin_logout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btn_admin_logout.setFixedSize(180, 45)
+        # 💥 退出按钮同步放大
+        self.btn_admin_logout.setFixedSize(200, 50)
         self.btn_admin_logout.setStyleSheet(
-            "QPushButton { background-color: transparent; border: 2px solid #7F1D1D; color: #EF4444; border-radius: 6px; font-weight: bold; font-size: 16px; } QPushButton:hover { background-color: #7F1D1D; color: #FFFFFF; }")
+            "QPushButton { background-color: transparent; border: 2px solid #7F1D1D; color: #EF4444; border-radius: 6px; font-weight: bold; font-size: 18px; } QPushButton:hover { background-color: #7F1D1D; color: #FFFFFF; }")
         self.verticalLayout_nav.addWidget(self.btn_admin_logout, 0, QtCore.Qt.AlignHCenter)
         self.verticalLayout_nav.addSpacing(30)
 
@@ -90,6 +93,8 @@ class Ui_AdminWindow(object):
 
         self.stackedWidget = QtWidgets.QStackedWidget(self.centralwidget)
         self.stackedWidget.setObjectName("stackedWidget")
+
+        # 同理，这里往下 `self.pages = []` 及各种组件搭建逻辑你直接保留原来的代码即可。
 
         self.pages = []
         for i, name in enumerate(btn_names):
@@ -444,6 +449,35 @@ class Ui_AdminWindow(object):
                 sec_layout.addWidget(lbl_email_title)
                 sec_layout.addLayout(email_layout)
                 sec_layout.addWidget(self.btn_save_email)
+
+                # 🌟 新增：主题风格切换
+                line2 = QtWidgets.QFrame()
+                line2.setFrameShape(QtWidgets.QFrame.HLine)
+                line2.setFrameShadow(QtWidgets.QFrame.Sunken)
+                line2.setStyleSheet("background-color: #333537; margin-top: 25px; margin-bottom: 25px;")
+                sec_layout.addWidget(line2)
+
+                lbl_theme_title = QtWidgets.QLabel("🎨 界面主题风格")
+                lbl_theme_title.setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: bold; border: none;")
+                sec_layout.addWidget(lbl_theme_title)
+
+                theme_layout = QtWidgets.QHBoxLayout()
+                theme_layout.setSpacing(15)
+                lbl_theme = QtWidgets.QLabel("选择主题:")
+                lbl_theme.setStyleSheet("color: #9CA3AF; font-size: 15px; border: none;")
+                self.combo_theme = QtWidgets.QComboBox()
+                self.combo_theme.addItems(["深空暗黑 (Dark Theme)", "工业亮白 (Light Theme)"])
+                self.combo_theme.setFixedWidth(250)
+                self.btn_apply_theme = QtWidgets.QPushButton("💾 应用主题")
+                self.btn_apply_theme.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+                self.btn_apply_theme.setStyleSheet(
+                    "QPushButton { background-color: #004A77; color: white; border-radius: 6px; padding: 10px 20px; font-weight: bold; font-size: 15px;} QPushButton:hover { background-color: #005B94; }")
+                theme_layout.addWidget(lbl_theme)
+                theme_layout.addWidget(self.combo_theme)
+                theme_layout.addWidget(self.btn_apply_theme)
+                theme_layout.addStretch()
+                sec_layout.addLayout(theme_layout)
+
                 sec_layout.addStretch()
 
                 pc_layout.addWidget(self.card_security, stretch=7)

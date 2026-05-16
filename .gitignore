@@ -20,3 +20,14 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+
+# 忽略模型权重文件
+*.pt
+*.onnx
+*.engine
+
+# 忽略测试视频和图片
+*.mp4
+*.avi
+*.jpg
+*.png

@@ -4,13 +4,14 @@ import datetime
 from collections import Counter
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QMessageBox, QPushButton, QHBoxLayout, QWidget, \
     QDialog, QVBoxLayout, QLabel, QLineEdit, QComboBox
-from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal  # 引入了 QThread 方便模拟 AI 思考延迟
+from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal, QSettings  # 引入了 QThread 方便模拟 AI 思考延迟
 from PyQt5.QtGui import QCursor, QPixmap, QColor, QFont, QPainter
 
 from PyQt5.QtChart import QChart, QChartView, QPieSeries, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
 
 from UI.admin_ui import Ui_AdminWindow
 from core.db_helper import DBHelper
+from core.theme_manager import apply_theme, THEME_DARK, THEME_LIGHT
 
 
 class AIChatThread(QThread):
@@ -143,6 +144,20 @@ class AdminWindow(QMainWindow, Ui_AdminWindow):
         self.admin_username = admin_username
         self.setupUi(self)
         self.db = DBHelper()
+        self.settings = QSettings()
+        self.current_theme = THEME_DARK
+
+        # 🌟 加载并应用已保存的主题
+        saved_theme = self.settings.value(f"{self.admin_username}_theme", THEME_DARK)
+        self.current_theme = saved_theme
+        if hasattr(self, 'combo_theme'):
+            idx = self.combo_theme.findText(saved_theme)
+            self.combo_theme.setCurrentIndex(idx if idx >= 0 else 0)
+        apply_theme(self, saved_theme)
+
+        # 🌟 绑定主题保存按钮
+        if hasattr(self, 'btn_apply_theme'):
+            self.btn_apply_theme.clicked.connect(self.save_theme_setting)
 
         for i, btn in enumerate(self.nav_buttons):
             btn.clicked.connect(lambda checked, idx=i: self.switch_page(idx))
@@ -406,16 +421,24 @@ class AdminWindow(QMainWindow, Ui_AdminWindow):
                 if col == 1: item.setForeground(QColor("#66B2FF"))
                 self.table_all_records.setItem(row_count, col, item)
 
-            btn = QPushButton("🖼️ 查看全局抓拍")
-            btn.setCursor(QCursor(Qt.PointingHandCursor))
-            btn.setStyleSheet(
-                "background-color: #004A77; color: white; border-radius: 4px; padding: 5px; font-weight: bold;")
-            btn.clicked.connect(lambda ch, p=img_path: self.show_snapshot(p))
+            btn_view = QPushButton("🖼️ 查看抓拍")
+            btn_view.setCursor(QCursor(Qt.PointingHandCursor))
+            btn_view.setStyleSheet(
+                "background-color: #004A77; color: white; border-radius: 4px; padding: 5px 10px; font-weight: bold;")
+            btn_view.clicked.connect(lambda ch, p=img_path: self.show_snapshot(p))
+
+            btn_del = QPushButton("🗑️ 删除")
+            btn_del.setCursor(QCursor(Qt.PointingHandCursor))
+            btn_del.setStyleSheet(
+                "background-color: #E11D48; color: white; border-radius: 4px; padding: 5px 10px; font-weight: bold;")
+            btn_del.clicked.connect(lambda ch, rid=r['id']: self.delete_alert_record(rid))
 
             widget = QWidget()
             layout = QHBoxLayout(widget)
             layout.setContentsMargins(0, 0, 0, 0)
-            layout.addWidget(btn, alignment=Qt.AlignCenter)
+            layout.setSpacing(8)
+            layout.addWidget(btn_view, alignment=Qt.AlignCenter)
+            layout.addWidget(btn_del, alignment=Qt.AlignCenter)
             self.table_all_records.setCellWidget(row_count, 4, widget)
 
     def show_snapshot(self, img_path):
@@ -433,6 +456,19 @@ class AdminWindow(QMainWindow, Ui_AdminWindow):
         label.setScaledContents(True)
         layout.addWidget(label)
         dialog.exec_()
+
+    def delete_alert_record(self, record_id):
+        """删除违规记录"""
+        reply = QMessageBox.question(self, '⚠️ 确认删除',
+                                     f"确定要永久删除该条违规记录（ID: {record_id}）吗？此操作不可逆！",
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            success, msg = self.db.delete_record(record_id)
+            if success:
+                QMessageBox.information(self, "删除成功", "违规记录已永久删除！")
+                self.load_all_records()
+            else:
+                QMessageBox.warning(self, "删除失败", msg)
 
         # ==========================================
 
@@ -795,20 +831,31 @@ class AdminWindow(QMainWindow, Ui_AdminWindow):
             QMessageBox.warning(self, "失败", f"邮箱写入数据库失败：{msg}")
 
     # ==========================================
+    # 🎨 主题切换
+    # ==========================================
+    def save_theme_setting(self):
+        if not hasattr(self, 'combo_theme'):
+            return
+        selected_theme = self.combo_theme.currentText()
+        self.settings.setValue(f"{self.admin_username}_theme", selected_theme)
+        self.current_theme = selected_theme
+        apply_theme(self, selected_theme)
+        QMessageBox.information(self, "主题已切换", f"界面主题已即时切换为：{selected_theme}")
+
+    # ==========================================
     # 🚪 回退到登录大门
     # ==========================================
     def logout(self):
-        reply = QMessageBox.question(self, '退出', "确定要离开管理员大厅吗？", QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.No)
+        reply = QMessageBox.question(self, '退出', "确定要离开管理员大厅吗？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
             self.close()
             from login_app import LoginWindow
             self.login_window = LoginWindow()
-            self.login_window.show()
+            self.login_window.showMaximized()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     win = AdminWindow()
-    win.show()
+    win.showMaximized()
     sys.exit(app.exec_())

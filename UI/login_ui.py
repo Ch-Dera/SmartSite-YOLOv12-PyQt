@@ -139,7 +139,7 @@ class Ui_Form(object):
         self.card_layout.setSpacing(16)
 
         # --- 标题区 ---
-        self.title_label = QtWidgets.QLabel("智慧工地管控系统")
+        self.title_label = QtWidgets.QLabel("智慧工地安全帽检测系统")
         self.title_label.setObjectName("title_label")
         self.title_label.setAlignment(QtCore.Qt.AlignCenter)
 
@@ -212,7 +212,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "智慧工地管控系统 - 登录"))
+        Form.setWindowTitle(_translate("Form", "智慧工地安全帽检测系统 - 登录"))
 
 
 if __name__ == "__main__":
